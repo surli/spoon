@@ -5,6 +5,8 @@ import spoon.Launcher;
 import spoon.compiler.SpoonResourceHelper;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtFieldAccess;
+import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtStatement;
@@ -15,11 +17,17 @@ import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.factory.Factory;
+import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.visitor.ModelConsistencyChecker;
+import spoon.reflect.visitor.chain.CtQuery;
 import spoon.reflect.visitor.filter.NameFilter;
+import spoon.reflect.visitor.filter.TypeFilter;
 import spoon.support.compiler.FileSystemFile;
 import spoon.support.template.Parameters;
+import spoon.template.Substitution;
+import spoon.template.Template;
 import spoon.template.TemplateMatcher;
+import spoon.test.template.testclasses.EncapsulateFieldOriginal_Test1;
 import spoon.test.template.testclasses.SecurityCheckerTemplate;
 
 import java.io.File;
@@ -435,5 +443,27 @@ public class TemplateTest {
 		match2 = matches.get(1);
 
 		assertTrue(match1.equals(match2));
+	}
+
+	@Test
+	public void testTemplateMatcherSubstituteAllValues() throws Exception {
+		Launcher spoon = new Launcher();
+		spoon.addInputResource("./src/test/java/spoon/test/template/testclasses/EncapsulateFieldOriginal_Test1.java");
+		spoon.addTemplateResource(new FileSystemFile("./src/test/java/spoon/test/template/GetterInvocationTemplate.java"));
+		spoon.buildModel();
+
+		CtClass<?> testClass = spoon.getFactory().Class().get(EncapsulateFieldOriginal_Test1.class);
+		CtField field = testClass.getField("name");
+		List<CtFieldRead> fieldAccesses = testClass.filterChildren(new TypeFilter<>(CtFieldRead.class)).list();
+		assertEquals(2, fieldAccesses.size());
+		CtFieldRead fieldReference = fieldAccesses.get(0);
+
+		Template<?> getterTemplate = new GetterInvocationTemplate(field.getType(), field.getSimpleName(), fieldReference);
+
+		CtBlock<?> getter = Substitution.substituteMethodBody(fieldReference.getParent(CtClass.class), getterTemplate, "getterInvocation");
+
+		assertEquals(1, getter.getStatements().size());
+		CtStatement statement = getter.getStatement(0);
+		assertEquals("getName()", statement.toString());
 	}
 }
