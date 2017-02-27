@@ -450,6 +450,7 @@ public class TemplateTest {
 
 		CtClass<?> helloClass = factory.Class().get(Hello.class);
 		CtMethod helloMethod = helloClass.getElements(new NameFilter<CtMethod>("print")).get(0);
-		assertTrue(helloMethod.toString().contains("throws Exception"));
+		String printmethod = helloMethod.toString();
+		assertTrue(printmethod.contains("throws java.lang.Exception"));
 	}
 }
