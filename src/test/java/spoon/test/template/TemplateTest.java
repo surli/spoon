@@ -21,6 +21,8 @@ import spoon.support.compiler.FileSystemFile;
 import spoon.support.template.Parameters;
 import spoon.template.TemplateMatcher;
 import spoon.test.template.testclasses.SecurityCheckerTemplate;
+import spoon.test.template.testclasses.transfo.Hello;
+import spoon.test.template.testclasses.transfo.MyTrans;
 
 import java.io.File;
 import java.io.Serializable;
@@ -435,5 +437,19 @@ public class TemplateTest {
 		match2 = matches.get(1);
 
 		assertTrue(match1.equals(match2));
+	}
+
+	@Test
+	public void testTransfo() throws Exception {
+		Launcher spoon = new Launcher();
+		spoon.addInputResource("./src/test/java/spoon/test/template/testclasses/transfo/Hello.java");
+		spoon.addTemplateResource(new FileSystemFile("./src/test/java/spoon/test/template/testclasses/transfo/MyTrans.java"));
+		spoon.addProcessor(new MyTrans());
+		spoon.buildModel();
+		Factory factory = spoon.getFactory();
+
+		CtClass<?> helloClass = factory.Class().get(Hello.class);
+		CtMethod helloMethod = helloClass.getElements(new NameFilter<CtMethod>("print")).get(0);
+		assertTrue(helloMethod.toString().contains("throws Exception"));
 	}
 }
