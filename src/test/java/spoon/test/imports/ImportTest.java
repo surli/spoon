@@ -715,5 +715,17 @@ public class ImportTest {
 
 		canBeBuilt(outputDir, 7);
 	}
+
+	@Test
+	public void testStaticImport() throws Exception {
+		Launcher spoon = new Launcher();
+		spoon.getEnvironment().setShouldCompile(true);
+		spoon.getEnvironment().setAutoImports(true);
+		spoon.addInputResource("./src/test/resources/Model/MyInterface.java");
+		spoon.addInputResource("./src/test/resources/Model/MyClass.java");
+		spoon.setBinaryOutputDirectory("./target/spoon/static_imports/bin");
+		spoon.setSourceOutputDirectory("./target/spoon/static_imports/src");
+		spoon.run();
+	}
 	
 }
