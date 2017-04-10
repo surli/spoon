@@ -848,4 +848,37 @@ public class ImportTest {
 		assertTrue(result.contains(superClass.getQualifiedName()));
 		assertFalse(result.contains(Object.class.getName()));
 	}
+
+	@Test
+	public void testStaticImporNoClasspath() {
+		final Launcher launcher = new Launcher();
+		launcher.getEnvironment().setNoClasspath(true);
+		launcher.getEnvironment().setAutoImports(true);
+		String outputDir = "./target/spooned-staticnocp";
+		launcher.addInputResource("./src/test/java/spoon/test/imports/testclasses/other/my/StaticField.java");
+		launcher.addInputResource("./src/test/java/spoon/test/imports/testclasses/other/Example.java");
+		launcher.addInputResource("./src/test/java/spoon/test/imports/testclasses/other/WorkingExample.java");
+		launcher.setSourceOutputDirectory(outputDir);
+		launcher.run();
+		canBeBuilt(outputDir, 7);
+
+		PrettyPrinter prettyPrinter = launcher.createPrettyPrinter();
+
+		CtType elementWorking = launcher.getFactory().Class().get("spoon.test.imports.testclasses.other.WorkingExample");
+		List<CtType<?>> toPrint = new ArrayList<>();
+		toPrint.add(elementWorking);
+
+		prettyPrinter.calculate(elementWorking.getPosition().getCompilationUnit(), toPrint);
+		String output = prettyPrinter.getResult();
+		assertTrue("The file WorkingExample should contain import for my.StaticField",output.contains("import spoon.test.imports.testclasses.other.my.StaticField;"));
+
+		CtType element = launcher.getFactory().Class().get("spoon.test.imports.testclasses.other.Example");
+		toPrint = new ArrayList<>();
+		toPrint.add(element);
+
+		prettyPrinter.calculate(element.getPosition().getCompilationUnit(), toPrint);
+		output = prettyPrinter.getResult();
+		assertTrue("The file Example should contain import for my.StaticField",output.contains("import spoon.test.imports.testclasses.other.my.StaticField;"));
+
+	}
 }
